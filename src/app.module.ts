@@ -2,6 +2,9 @@ import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { createTypeOrmConfig } from "./typeorm.config.shared";
+// import { UserModule } from './user/user.module';
+// import { PostModule } from './post/post.module';
+import { AuthModule } from './auth/auth.module';
 
 
 export const typeOrmConfig = TypeOrmModule.forRootAsync({
@@ -23,8 +26,9 @@ export const typeOrmConfig = TypeOrmModule.forRootAsync({
     // Type orm init
     typeOrmConfig,
 
-    //Other stuffs
-    // hehe
+    AuthModule,
+
+
 
   ]
 })
