@@ -10,7 +10,10 @@ import { AuthModule } from './auth/auth.module';
 export const typeOrmConfig = TypeOrmModule.forRootAsync({
   imports: [ConfigModule],
   inject: [ConfigService],
-  useFactory: (configService: ConfigService) => createTypeOrmConfig(configService),
+  useFactory: (configService: ConfigService) => ({
+    ...createTypeOrmConfig(configService),
+    autoLoadEntities: true
+  }),
 });
 
 

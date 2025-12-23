@@ -7,7 +7,7 @@
     "webpack": true
   },
   "projects": {
-    "common": {
+    "libs": {
       "type": "library",
       "root": "libs/common",
       "entryFile": "index",
