@@ -6,6 +6,7 @@ import { DataSource } from "typeorm";
 import { join } from "path";
 import { spawnSync } from "child_process";
 import { Module } from "@nestjs/common";
+import { createTypeOrmConfig } from "../src/typeorm.config.shared";
 
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true })],
@@ -13,24 +14,18 @@ import { Module } from "@nestjs/common";
 class AppConfigModule {}
 
 async function createDataSource() {
-  const app = await NestFactory.createApplicationContext(AppConfigModule, { logger: false });
+  const app = await NestFactory.createApplicationContext(AppConfigModule, {
+    logger: false,
+  });
   const config = app.get(ConfigService);
 
   const ds = new DataSource({
-    type: "postgres",
-    host: config.get("DATABASE_HOST"),
-    port: Number(config.get("DATABASE_PORT")),
-    username: config.get("DATABASE_USERNAME"),
-    password: config.get("DATABASE_PASSWORD"),
-    database: config.get("DATABASE_NAME"),
-    entities: [__dirname + "/**/*.entity{.ts,.js}"],
-    synchronize: false,
+    ...createTypeOrmConfig(config),
   });
 
   await app.close();
   return ds;
 }
-
 async function runMigrations() {
   const ds = await createDataSource();
   await ds.initialize();

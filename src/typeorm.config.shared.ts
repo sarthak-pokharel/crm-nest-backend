@@ -1,4 +1,5 @@
 import { ConfigService } from "@nestjs/config";
+import { join } from "path";
 import { DataSourceOptions } from "typeorm";
 
 export function createTypeOrmConfig(configService?: ConfigService): DataSourceOptions {
@@ -12,8 +13,8 @@ export function createTypeOrmConfig(configService?: ConfigService): DataSourceOp
     username: get("DATABASE_USERNAME"),
     password: get("DATABASE_PASSWORD"),
     database: get("DATABASE_NAME"),
-    entities: [__dirname + "/**/*.entity{.ts,.js}"], // or explicit imports
-    migrations: [__dirname + "/migrations/*.{ts,js}"],
+    entities: [join(__dirname, "/**/*.entity{.ts,.js}")],
+    migrations: [join(__dirname, "/migrations/*{.ts,.js}")],
     synchronize: false,
   };
 }
