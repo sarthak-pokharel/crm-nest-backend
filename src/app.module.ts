@@ -29,7 +29,8 @@ export const typeOrmConfig = TypeOrmModule.forRootAsync({
     }),
     typeOrmConfig,
 
-    AuthModule
+    AuthModule,
+    EmailsModule,
 
   ]
 })
