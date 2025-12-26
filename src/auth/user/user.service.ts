@@ -1,55 +1,42 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { ConflictException, Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
+import { DataSource } from 'typeorm';
 import { User } from './user.entity';
 import { CreateUserDto, UpdateUserDto } from './user.dto';
+import { EventBus, EventPublisher } from '@nestjs/cqrs';
+import { UserCreatedEvent } from '@libs/common/events/user-created.event';
+import { UserRepository } from './user.repository';
 
 @Injectable()
 export class UserService {
     constructor(
-        @InjectRepository(User)
-        private readonly userRepository: Repository<User>,
+        private readonly userRepository: UserRepository,
+        private readonly publisher: EventPublisher,
     ) { }
 
-    async userWithEmailExists(email: string): Promise<boolean> {
-        const user = await this.userRepository.findOne({ where: { email } });
-        return !!user;
-    }
-
     async create(data: CreateUserDto): Promise<User> {
-        //first check if user exists
-        let existingUser = await this.userWithEmailExists(data.email);
-        if (existingUser) {
-            throw new Error('User with this email already exists');
-        }
-
         const user = this.userRepository.create(data);
-        return this.userRepository.save(user);
-    }
+        const savedUser = await this.userRepository.saveUser(user);
+        const userModel = this.publisher.mergeObjectContext(savedUser);
+        userModel.register();
+        userModel.commit();
 
-    findAll(): Promise<User[]> {
-        return this.userRepository.find();
+        return savedUser;
     }
-
-    async findById(id: number): Promise<User> {
-        const user = await this.userRepository.findOne({ where: { id } });
-        if (!user) throw new NotFoundException(`User with id ${id} not found`);
-        return user;
-    }
-    async findByEmail(email: string): Promise<User | null> {
-        const user = await this.userRepository.findOne({ where: { email } });
-        return user || null;
-    }
-    
     async update(id: number, data: UpdateUserDto): Promise<User> {
-        const user = await this.findById(id);
-        Object.assign(user, data);
-        return this.userRepository.save(user);
+        return this.userRepository.patch(id, data);
     }
 
     async remove(id: number): Promise<void> {
-        const user = await this.findById(id);
+        const user = await this.userRepository.getOrThrow(id);
         await this.userRepository.remove(user);
     }
-    
+
+
+    async findByEmail(email: string): Promise<User | null> {
+        return this.userRepository.findByEmail(email);
+    }
+    async findById(id: number): Promise<User> {
+        return this.userRepository.getOrThrow(id);
+    }
+
 }

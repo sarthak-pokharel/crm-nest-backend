@@ -10,11 +10,7 @@ import { GetUser } from "./user/user.decorator";
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
 
-    @Get('status')
-    getStatus() {
-        return this.authService.getStatus();
-    }
-
+    
     @Post("/login")
     login(@Body() body: LoginUserDto) {
         return this.authService.login(body.email, body.password);

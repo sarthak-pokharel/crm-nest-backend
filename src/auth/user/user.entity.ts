@@ -1,8 +1,10 @@
 
+import { UserCreatedEvent } from '@libs/common/events/user-created.event';
+import { AggregateRoot } from '@nestjs/cqrs';
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
-export class User {
+export class User extends AggregateRoot {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -20,4 +22,8 @@ export class User {
 
   @Column({ default: true })
   isActive: boolean;
+
+  register() {
+    this.apply(new UserCreatedEvent(this.id, this.email));
+  }
 }

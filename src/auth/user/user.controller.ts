@@ -21,10 +21,6 @@ export class UserController {
         return this.userService.create(data);
     }
 
-    @Get()
-    findAll() {
-        return this.userService.findAll();
-    }
 
     @Get(':id')
     findOne(@Param('id', ParseIntPipe) id: number) {
