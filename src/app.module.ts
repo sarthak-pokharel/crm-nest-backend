@@ -5,6 +5,7 @@ import { createTypeOrmConfig } from "./typeorm.config.shared";
 // import { UserModule } from './user/user.module';
 // import { PostModule } from './post/post.module';
 import { AuthModule } from './auth/auth.module';
+import { JwtModule } from "@nestjs/jwt";
 
 
 export const typeOrmConfig = TypeOrmModule.forRootAsync({
@@ -29,9 +30,8 @@ export const typeOrmConfig = TypeOrmModule.forRootAsync({
     // Type orm init
     typeOrmConfig,
 
+
     AuthModule,
-
-
 
   ]
 })
