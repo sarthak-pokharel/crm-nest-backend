@@ -24,6 +24,6 @@ export class User extends AggregateRoot {
   isActive: boolean;
 
   register() {
-    this.apply(new UserCreatedEvent(this.id, this.email));
+    this.apply(new UserCreatedEvent(this));
   }
 }
