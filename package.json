@@ -20,9 +20,11 @@
     "test:e2e": "jest --config ./apps/crm/test/jest-e2e.json",
     "migration:generate": "ts-node scripts/migration.ts generate",
     "migration:run": "ts-node scripts/migration.ts run",
-    "migration:revert": "ts-node scripts/migration.ts revert"
+    "migration:revert": "ts-node scripts/migration.ts revert",
+    "seed:permissions": "ts-node scripts/seed-permissions.ts"
   },
   "dependencies": {
+    "@casl/ability": "^6.7.5",
     "@nestjs/bullmq": "^11.0.4",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
