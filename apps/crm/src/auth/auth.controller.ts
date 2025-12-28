@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Post, Req, UseGuards, Query } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { CreateUserDto, LoginUserDto } from "./user/user.dto";
 import { JwtStrategy } from "./jwt/jwt.strategy";
@@ -25,5 +25,20 @@ export class AuthController {
     @Get("/me")
     me(@GetUser() user) {
         return this.authService.me(user);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get("/permissions")
+    permissions(@GetUser() user, @Query('organizationId') organizationId?: string) {
+        return this.authService.getPermissions(
+            user, 
+            organizationId ? parseInt(organizationId) : undefined
+        );
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Get("/users")
+    async getAllUsers() {
+        return this.authService.getAllUsers();
     }
 }
