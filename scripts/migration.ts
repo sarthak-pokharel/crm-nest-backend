@@ -6,7 +6,7 @@ import { DataSource } from "typeorm";
 import { join } from "path";
 import { spawnSync } from "child_process";
 import { Module } from "@nestjs/common";
-import { createTypeOrmConfig } from "../src/typeorm.config.shared";
+import { createTypeOrmConfig } from "../apps/crm/src/typeorm.config.shared";
 
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true })],
