@@ -7,6 +7,7 @@ import { createTypeOrmConfig } from "./typeorm.config.shared";
 import { AuthModule } from './auth/auth.module';
 import { JwtModule } from "@nestjs/jwt";
 import { EmailsModule } from './emails/emails.module';
+import { PermissionsModule } from './permissions/permissions.module';
 
 
 export const typeOrmConfig = TypeOrmModule.forRootAsync({
@@ -31,7 +32,8 @@ export const typeOrmConfig = TypeOrmModule.forRootAsync({
 
     AuthModule,
     EmailsModule,
+    PermissionsModule,
 
   ]
 })
-export class AppModule {}
+export class AppModule { }

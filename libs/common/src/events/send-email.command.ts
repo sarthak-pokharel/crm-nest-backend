@@ -1,4 +1,4 @@
-import { ACTIONS } from '@libs/common/constants';
+import { ACTIONS } from '../constants';
 import { EmailData } from '../types/email.types';
 
 export class SendEmailCommand {
