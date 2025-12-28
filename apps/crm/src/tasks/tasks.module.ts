@@ -4,10 +4,12 @@ import { TasksService } from './tasks.service';
 import { TasksController } from './tasks.controller';
 import { Task } from './entities/task.entity';
 import { PermissionsModule } from '../permissions/permissions.module';
+import { UserOrganizationRole } from '../auth/organization/user-organization-role.entity';
+import './tasks.permissions';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Task]),
+        TypeOrmModule.forFeature([Task, UserOrganizationRole]),
         PermissionsModule,
     ],
     controllers: [TasksController],

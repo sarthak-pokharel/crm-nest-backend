@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { TenantBaseEntity } from '../../common/base.entity';
 
 export enum ActivityType {
     CALL = 'call',
@@ -18,7 +19,7 @@ export enum ActivityRelationType {
 }
 
 @Entity('activities')
-export class Activity {
+export class Activity extends TenantBaseEntity {
     @PrimaryGeneratedColumn()
     id: number;
 
@@ -54,10 +55,4 @@ export class Activity {
 
     @Column({ nullable: true })
     companyId: number;
-
-    @CreateDateColumn()
-    createdAt: Date;
-
-    @UpdateDateColumn()
-    updatedAt: Date;
 }

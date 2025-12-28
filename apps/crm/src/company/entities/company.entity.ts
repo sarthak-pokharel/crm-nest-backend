@@ -1,7 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { TenantBaseEntity } from '../../common/base.entity';
 
 @Entity('companies')
-export class Company {
+export class Company extends TenantBaseEntity {
     @PrimaryGeneratedColumn()
     id: number;
 
@@ -49,10 +50,4 @@ export class Company {
 
     @Column({ nullable: true })
     ownerId: number;
-
-    @CreateDateColumn()
-    createdAt: Date;
-
-    @UpdateDateColumn()
-    updatedAt: Date;
 }

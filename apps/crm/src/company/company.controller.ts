@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseIntPipe, Headers } from '@nestjs/common';
 import { CompanyService } from './company.service';
 import { CreateCompanyDto, UpdateCompanyDto } from './dto';
 import { JwtAuthGuard } from '../auth/jwt/jwt.guard';
@@ -16,20 +16,31 @@ export class CompanyController {
 
     @Post()
     @Permission(CompanyPermissions.CREATE)
-    create(@Body() createCompanyDto: CreateCompanyDto, @GetUser() user: User) {
-        return this.companyService.create(createCompanyDto, user);
+    create(
+        @Body() createCompanyDto: CreateCompanyDto,
+        @GetUser() user: User,
+        @Headers('x-crm-org-id') orgIdHeader?: string,
+    ) {
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
+        return this.companyService.create(createCompanyDto, user, organizationId);
     }
 
     @Get()
     @Permission(CompanyPermissions.READ)
-    findAll(@GetUser() user: User) {
-        return this.companyService.findAll(user);
+    findAll(@GetUser() user: User, @Headers('x-crm-org-id') orgIdHeader?: string) {
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
+        return this.companyService.findAll(user, organizationId);
     }
 
     @Get(':id')
     @Permission(OR(Owner, CompanyPermissions.READ))
-    findOne(@Param('id', ParseIntPipe) id: number, @GetUser() user: User) {
-        return this.companyService.findOne(id, user);
+    findOne(
+        @Param('id', ParseIntPipe) id: number,
+        @GetUser() user: User,
+        @Headers('x-crm-org-id') orgIdHeader?: string,
+    ) {
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
+        return this.companyService.findOne(id, user, organizationId);
     }
 
     @Patch(':id')
@@ -38,13 +49,20 @@ export class CompanyController {
         @Param('id', ParseIntPipe) id: number,
         @Body() updateCompanyDto: UpdateCompanyDto,
         @GetUser() user: User,
+        @Headers('x-crm-org-id') orgIdHeader?: string,
     ) {
-        return this.companyService.update(id, updateCompanyDto, user);
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
+        return this.companyService.update(id, updateCompanyDto, user, organizationId);
     }
 
     @Delete(':id')
     @Permission(OR(Owner, CompanyPermissions.DELETE))
-    remove(@Param('id', ParseIntPipe) id: number, @GetUser() user: User) {
-        return this.companyService.remove(id, user);
+    remove(
+        @Param('id', ParseIntPipe) id: number,
+        @GetUser() user: User,
+        @Headers('x-crm-org-id') orgIdHeader?: string,
+    ) {
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
+        return this.companyService.remove(id, user, organizationId);
     }
 }

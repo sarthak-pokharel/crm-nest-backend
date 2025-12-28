@@ -4,10 +4,12 @@ import { DealsService } from './deals.service';
 import { DealsController } from './deals.controller';
 import { Deal } from './entities/deal.entity';
 import { PermissionsModule } from '../permissions/permissions.module';
+import { UserOrganizationRole } from '../auth/organization/user-organization-role.entity';
+import './deals.permissions';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Deal]),
+        TypeOrmModule.forFeature([Deal, UserOrganizationRole]),
         PermissionsModule,
     ],
     controllers: [DealsController],

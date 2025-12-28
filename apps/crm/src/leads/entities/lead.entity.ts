@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Company } from '../../company/entities/company.entity';
+import { TenantBaseEntity } from '../../common/base.entity';
 
 export enum LeadStatus {
     NEW = 'new',
@@ -21,7 +22,7 @@ export enum LeadSource {
 }
 
 @Entity('leads')
-export class Lead {
+export class Lead extends TenantBaseEntity {
     @PrimaryGeneratedColumn()
     id: number;
 
@@ -91,10 +92,4 @@ export class Lead {
 
     @Column({ type: 'timestamp', nullable: true })
     lastContactedAt: Date;
-
-    @CreateDateColumn()
-    createdAt: Date;
-
-    @UpdateDateColumn()
-    updatedAt: Date;
 }

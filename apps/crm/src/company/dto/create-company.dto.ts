@@ -1,6 +1,10 @@
 import { IsString, IsEmail, IsOptional, IsNumber, IsBoolean, MaxLength, IsUrl } from 'class-validator';
 
 export class CreateCompanyDto {
+    @IsOptional()
+    @IsNumber()
+    organizationId?: number;
+
     @IsString()
     @MaxLength(255)
     name: string;

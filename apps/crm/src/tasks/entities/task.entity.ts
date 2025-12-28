@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { TenantBaseEntity } from '../../common/base.entity';
 
 export enum TaskPriority {
     LOW = 'low',
@@ -15,7 +16,7 @@ export enum TaskStatus {
 }
 
 @Entity('tasks')
-export class Task {
+export class Task extends TenantBaseEntity {
     @PrimaryGeneratedColumn()
     id: number;
 
@@ -57,10 +58,4 @@ export class Task {
 
     @Column({ type: 'timestamp', nullable: true })
     reminderDate: Date;
-
-    @CreateDateColumn()
-    createdAt: Date;
-
-    @UpdateDateColumn()
-    updatedAt: Date;
 }

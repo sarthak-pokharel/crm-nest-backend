@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseIntPipe, Query, Headers } from '@nestjs/common';
 import { DealsService } from './deals.service';
 import { CreateDealDto, UpdateDealDto } from './dto';
 import { DealStage } from './entities/deal.entity';
@@ -17,29 +17,48 @@ export class DealsController {
 
     @Post()
     @Permission(DealPermissions.CREATE)
-    create(@Body() createDealDto: CreateDealDto, @GetUser() user: User) {
-        return this.dealsService.create(createDealDto, user);
+    create(
+        @Body() createDealDto: CreateDealDto,
+        @GetUser() user: User,
+        @Headers('x-crm-org-id') orgIdHeader?: string,
+    ) {
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
+        return this.dealsService.create(createDealDto, user, organizationId);
     }
 
     @Get()
     @Permission(DealPermissions.READ)
-    findAll(@GetUser() user: User, @Query('stage') stage?: DealStage) {
+    findAll(
+        @GetUser() user: User,
+        @Query('stage') stage?: DealStage,
+        @Headers('x-crm-org-id') orgIdHeader?: string,
+    ) {
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
         if (stage) {
-            return this.dealsService.findByStage(stage, user);
+            return this.dealsService.findByStage(stage, user, organizationId);
         }
-        return this.dealsService.findAll(user);
+        return this.dealsService.findAll(user, organizationId);
     }
 
     @Get('pipeline')
     @Permission(DealPermissions.READ)
-    getPipeline(@GetUser() user: User) {
-        return this.dealsService.getDealsPipeline(user);
+    getPipeline(
+        @GetUser() user: User,
+        @Headers('x-crm-org-id') orgIdHeader?: string,
+    ) {
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
+        return this.dealsService.getDealsPipeline(user, organizationId);
     }
 
     @Get(':id')
     @Permission(OR(Owner, DealPermissions.READ))
-    findOne(@Param('id', ParseIntPipe) id: number, @GetUser() user: User) {
-        return this.dealsService.findOne(id, user);
+    findOne(
+        @Param('id', ParseIntPipe) id: number,
+        @GetUser() user: User,
+        @Headers('x-crm-org-id') orgIdHeader?: string,
+    ) {
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
+        return this.dealsService.findOne(id, user, organizationId);
     }
 
     @Patch(':id')
@@ -48,13 +67,20 @@ export class DealsController {
         @Param('id', ParseIntPipe) id: number,
         @Body() updateDealDto: UpdateDealDto,
         @GetUser() user: User,
+        @Headers('x-crm-org-id') orgIdHeader?: string,
     ) {
-        return this.dealsService.update(id, updateDealDto, user);
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
+        return this.dealsService.update(id, updateDealDto, user, organizationId);
     }
 
     @Delete(':id')
     @Permission(OR(Owner, DealPermissions.DELETE))
-    remove(@Param('id', ParseIntPipe) id: number, @GetUser() user: User) {
-        return this.dealsService.remove(id, user);
+    remove(
+        @Param('id', ParseIntPipe) id: number,
+        @GetUser() user: User,
+        @Headers('x-crm-org-id') orgIdHeader?: string,
+    ) {
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
+        return this.dealsService.remove(id, user, organizationId);
     }
 }

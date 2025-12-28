@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseIntPipe, Query, Headers } from '@nestjs/common';
 import { LeadsService } from './leads.service';
 import { CreateLeadDto, UpdateLeadDto } from './dto';
 import { LeadStatus } from './entities/lead.entity';
@@ -17,23 +17,38 @@ export class LeadsController {
 
     @Post()
     @Permission(LeadPermissions.CREATE)
-    create(@Body() createLeadDto: CreateLeadDto, @GetUser() user: User) {
-        return this.leadsService.create(createLeadDto, user);
+    create(
+        @Body() createLeadDto: CreateLeadDto,
+        @GetUser() user: User,
+        @Headers('x-crm-org-id') orgIdHeader?: string,
+    ) {
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
+        return this.leadsService.create(createLeadDto, user, organizationId);
     }
 
     @Get()
     @Permission(LeadPermissions.READ)
-    findAll(@GetUser() user: User, @Query('status') status?: LeadStatus) {
+    findAll(
+        @GetUser() user: User,
+        @Headers('x-crm-org-id') orgIdHeader?: string,
+        @Query('status') status?: LeadStatus,
+    ) {
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
         if (status) {
-            return this.leadsService.getLeadsByStatus(status, user);
+            return this.leadsService.getLeadsByStatus(status, user, organizationId);
         }
-        return this.leadsService.findAll(user);
+        return this.leadsService.findAll(user, organizationId);
     }
 
     @Get(':id')
     @Permission(OR(Owner, LeadPermissions.READ))
-    findOne(@Param('id', ParseIntPipe) id: number, @GetUser() user: User) {
-        return this.leadsService.findOne(id, user);
+    findOne(
+        @Param('id', ParseIntPipe) id: number,
+        @GetUser() user: User,
+        @Headers('x-crm-org-id') orgIdHeader?: string,
+    ) {
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
+        return this.leadsService.findOne(id, user, organizationId);
     }
 
     @Patch(':id')
@@ -42,8 +57,10 @@ export class LeadsController {
         @Param('id', ParseIntPipe) id: number,
         @Body() updateLeadDto: UpdateLeadDto,
         @GetUser() user: User,
+        @Headers('x-crm-org-id') orgIdHeader?: string,
     ) {
-        return this.leadsService.update(id, updateLeadDto, user);
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
+        return this.leadsService.update(id, updateLeadDto, user, organizationId);
     }
 
     @Patch(':id/status')
@@ -52,13 +69,20 @@ export class LeadsController {
         @Param('id', ParseIntPipe) id: number,
         @Body('status') status: LeadStatus,
         @GetUser() user: User,
+        @Headers('x-crm-org-id') orgIdHeader?: string,
     ) {
-        return this.leadsService.updateStatus(id, status, user);
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
+        return this.leadsService.updateStatus(id, status, user, organizationId);
     }
 
     @Delete(':id')
     @Permission(OR(Owner, LeadPermissions.DELETE))
-    remove(@Param('id', ParseIntPipe) id: number, @GetUser() user: User) {
-        return this.leadsService.remove(id, user);
+    remove(
+        @Param('id', ParseIntPipe) id: number,
+        @GetUser() user: User,
+        @Headers('x-crm-org-id') orgIdHeader?: string,
+    ) {
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
+        return this.leadsService.remove(id, user, organizationId);
     }
 }

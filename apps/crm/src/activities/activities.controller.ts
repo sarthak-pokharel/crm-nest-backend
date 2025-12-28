@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseIntPipe, Query, Headers } from '@nestjs/common';
 import { ActivitiesService } from './activities.service';
 import { CreateActivityDto, UpdateActivityDto } from './dto';
 import { ActivityType, ActivityRelationType } from './entities/activity.entity';
@@ -17,8 +17,13 @@ export class ActivitiesController {
 
     @Post()
     @Permission(ActivityPermissions.CREATE)
-    create(@Body() createActivityDto: CreateActivityDto, @GetUser() user: User) {
-        return this.activitiesService.create(createActivityDto, user);
+    create(
+        @Body() createActivityDto: CreateActivityDto,
+        @GetUser() user: User,
+        @Headers('x-crm-org-id') orgIdHeader?: string,
+    ) {
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
+        return this.activitiesService.create(createActivityDto, user, organizationId);
     }
 
     @Get()
@@ -28,26 +33,38 @@ export class ActivitiesController {
         @Query('type') type?: ActivityType,
         @Query('relationType') relationType?: ActivityRelationType,
         @Query('relationId') relationId?: string,
+        @Headers('x-crm-org-id') orgIdHeader?: string,
     ) {
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
         if (type) {
-            return this.activitiesService.findByType(type, user);
+            return this.activitiesService.findByType(type, user, organizationId);
         }
         if (relationType && relationId) {
-            return this.activitiesService.findByRelation(relationType, parseInt(relationId), user);
+            return this.activitiesService.findByRelation(relationType, parseInt(relationId), user, organizationId);
         }
-        return this.activitiesService.findAll(user);
+        return this.activitiesService.findAll(user, organizationId);
     }
 
     @Get('upcoming')
     @Permission(ActivityPermissions.READ)
-    getUpcoming(@GetUser() user: User, @Query('limit') limit?: string) {
-        return this.activitiesService.getUpcoming(user, limit ? parseInt(limit) : 10);
+    getUpcoming(
+        @GetUser() user: User,
+        @Query('limit') limit?: string,
+        @Headers('x-crm-org-id') orgIdHeader?: string,
+    ) {
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
+        return this.activitiesService.getUpcoming(user, limit ? parseInt(limit) : 10, organizationId);
     }
 
     @Get(':id')
     @Permission(OR(Owner, ActivityPermissions.READ))
-    findOne(@Param('id', ParseIntPipe) id: number, @GetUser() user: User) {
-        return this.activitiesService.findOne(id, user);
+    findOne(
+        @Param('id', ParseIntPipe) id: number,
+        @GetUser() user: User,
+        @Headers('x-crm-org-id') orgIdHeader?: string,
+    ) {
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
+        return this.activitiesService.findOne(id, user, organizationId);
     }
 
     @Patch(':id')
@@ -56,13 +73,20 @@ export class ActivitiesController {
         @Param('id', ParseIntPipe) id: number,
         @Body() updateActivityDto: UpdateActivityDto,
         @GetUser() user: User,
+        @Headers('x-crm-org-id') orgIdHeader?: string,
     ) {
-        return this.activitiesService.update(id, updateActivityDto, user);
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
+        return this.activitiesService.update(id, updateActivityDto, user, organizationId);
     }
 
     @Delete(':id')
     @Permission(OR(Owner, ActivityPermissions.DELETE))
-    remove(@Param('id', ParseIntPipe) id: number, @GetUser() user: User) {
-        return this.activitiesService.remove(id, user);
+    remove(
+        @Param('id', ParseIntPipe) id: number,
+        @GetUser() user: User,
+        @Headers('x-crm-org-id') orgIdHeader?: string,
+    ) {
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
+        return this.activitiesService.remove(id, user, organizationId);
     }
 }

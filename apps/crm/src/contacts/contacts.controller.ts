@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseIntPipe, Query, Headers } from '@nestjs/common';
 import { ContactsService } from './contacts.service';
 import { CreateContactDto, UpdateContactDto } from './dto';
 import { JwtAuthGuard } from '../auth/jwt/jwt.guard';
@@ -16,23 +16,38 @@ export class ContactsController {
 
     @Post()
     @Permission(ContactPermissions.CREATE)
-    create(@Body() createContactDto: CreateContactDto, @GetUser() user: User) {
-        return this.contactsService.create(createContactDto, user);
+    create(
+        @Body() createContactDto: CreateContactDto,
+        @GetUser() user: User,
+        @Headers('x-crm-org-id') orgIdHeader?: string,
+    ) {
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
+        return this.contactsService.create(createContactDto, user, organizationId);
     }
 
     @Get()
     @Permission(ContactPermissions.READ)
-    findAll(@GetUser() user: User, @Query('companyId') companyId?: string) {
+    findAll(
+        @GetUser() user: User,
+        @Query('companyId') companyId?: string,
+        @Headers('x-crm-org-id') orgIdHeader?: string,
+    ) {
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
         if (companyId) {
-            return this.contactsService.findByCompany(parseInt(companyId), user);
+            return this.contactsService.findByCompany(parseInt(companyId), user, organizationId);
         }
-        return this.contactsService.findAll(user);
+        return this.contactsService.findAll(user, organizationId);
     }
 
     @Get(':id')
     @Permission(OR(Owner, ContactPermissions.READ))
-    findOne(@Param('id', ParseIntPipe) id: number, @GetUser() user: User) {
-        return this.contactsService.findOne(id, user);
+    findOne(
+        @Param('id', ParseIntPipe) id: number,
+        @GetUser() user: User,
+        @Headers('x-crm-org-id') orgIdHeader?: string,
+    ) {
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
+        return this.contactsService.findOne(id, user, organizationId);
     }
 
     @Patch(':id')
@@ -41,13 +56,20 @@ export class ContactsController {
         @Param('id', ParseIntPipe) id: number,
         @Body() updateContactDto: UpdateContactDto,
         @GetUser() user: User,
+        @Headers('x-crm-org-id') orgIdHeader?: string,
     ) {
-        return this.contactsService.update(id, updateContactDto, user);
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
+        return this.contactsService.update(id, updateContactDto, user, organizationId);
     }
 
     @Delete(':id')
     @Permission(OR(Owner, ContactPermissions.DELETE))
-    remove(@Param('id', ParseIntPipe) id: number, @GetUser() user: User) {
-        return this.contactsService.remove(id, user);
+    remove(
+        @Param('id', ParseIntPipe) id: number,
+        @GetUser() user: User,
+        @Headers('x-crm-org-id') orgIdHeader?: string,
+    ) {
+        const organizationId = orgIdHeader ? parseInt(orgIdHeader, 10) : undefined;
+        return this.contactsService.remove(id, user, organizationId);
     }
 }

@@ -4,42 +4,49 @@ import { Repository } from 'typeorm';
 import { Deal, DealStage } from './entities/deal.entity';
 import { CreateDealDto, UpdateDealDto } from './dto';
 import { User } from '../auth/user/user.entity';
+import { UserOrganizationRole } from '../auth/organization/user-organization-role.entity';
+import { TenantBaseService } from '../common/tenant-base.service';
 
 @Injectable()
-export class DealsService {
+export class DealsService extends TenantBaseService {
     constructor(
         @InjectRepository(Deal)
         private dealRepository: Repository<Deal>,
-    ) {}
+        @InjectRepository(UserOrganizationRole)
+        protected userOrganizationRoleRepository: Repository<UserOrganizationRole>,
+    ) {
+        super(userOrganizationRoleRepository);
+    }
 
-    async create(createDealDto: CreateDealDto, user: User): Promise<Deal> {
+    async create(createDealDto: CreateDealDto, user: User, contextOrgId?: number): Promise<Deal> {
+        const organizationId = await this.validateOrganizationAccess(user, contextOrgId);
+        
         const deal = this.dealRepository.create({
             ...createDealDto,
-            ownerId: user.id,
+            createdById: user.id,
+            organizationId,
             assignedToId: createDealDto.assignedToId || user.id,
         });
         return this.dealRepository.save(deal);
     }
 
-    async findAll(user: User): Promise<Deal[]> {
-        const queryBuilder = this.dealRepository.createQueryBuilder('deal');
-
-        // Apply scope filtering
-        if (user.companyId) {
-            queryBuilder.andWhere('deal.companyId = :companyId', { companyId: user.companyId });
-        }
-
-        return queryBuilder
+    async findAll(user: User, contextOrgId?: number): Promise<Deal[]> {
+        const organizationId = await this.validateOrganizationAccess(user, contextOrgId);
+        
+        return this.dealRepository.createQueryBuilder('deal')
             .leftJoinAndSelect('deal.company', 'company')
             .leftJoinAndSelect('deal.contact', 'contact')
             .where('deal.isActive = :isActive', { isActive: true })
+            .andWhere('deal.organizationId = :organizationId', { organizationId })
             .orderBy('deal.createdAt', 'DESC')
             .getMany();
     }
 
-    async findOne(id: number, user: User): Promise<Deal> {
+    async findOne(id: number, user: User, contextOrgId?: number): Promise<Deal> {
+        const organizationId = await this.validateOrganizationAccess(user, contextOrgId);
+        
         const deal = await this.dealRepository.findOne({ 
-            where: { id },
+            where: { id, organizationId },
             relations: ['company', 'contact'],
         });
         
@@ -47,33 +54,24 @@ export class DealsService {
             throw new NotFoundException(`Deal with ID ${id} not found`);
         }
 
-        // Check scope access
-        if (user.companyId && deal.companyId !== user.companyId) {
-            throw new ForbiddenException('You do not have access to this deal');
-        }
-
         return deal;
     }
 
-    async findByStage(stage: DealStage, user: User): Promise<Deal[]> {
-        const queryBuilder = this.dealRepository.createQueryBuilder('deal')
-            .where('deal.stage = :stage', { stage })
-            .andWhere('deal.isActive = :isActive', { isActive: true });
-
-        // Apply scope filtering
-        if (user.companyId) {
-            queryBuilder.andWhere('deal.companyId = :companyId', { companyId: user.companyId });
-        }
-
-        return queryBuilder
+    async findByStage(stage: DealStage, user: User, contextOrgId?: number): Promise<Deal[]> {
+        const organizationId = await this.validateOrganizationAccess(user, contextOrgId);
+        
+        return this.dealRepository.createQueryBuilder('deal')
             .leftJoinAndSelect('deal.company', 'company')
             .leftJoinAndSelect('deal.contact', 'contact')
+            .where('deal.stage = :stage', { stage })
+            .andWhere('deal.isActive = :isActive', { isActive: true })
+            .andWhere('deal.organizationId = :organizationId', { organizationId })
             .orderBy('deal.createdAt', 'DESC')
             .getMany();
     }
 
-    async update(id: number, updateDealDto: UpdateDealDto, user: User): Promise<Deal> {
-        const deal = await this.findOne(id, user);
+    async update(id: number, updateDealDto: UpdateDealDto, user: User, contextOrgId?: number): Promise<Deal> {
+        const deal = await this.findOne(id, user, contextOrgId);
 
         // Auto-set actualCloseDate when deal is closed
         if (updateDealDto.stage === DealStage.CLOSED_WON || updateDealDto.stage === DealStage.CLOSED_LOST) {
@@ -86,21 +84,18 @@ export class DealsService {
         return this.dealRepository.save(deal);
     }
 
-    async remove(id: number, user: User): Promise<void> {
-        const deal = await this.findOne(id, user);
+    async remove(id: number, user: User, contextOrgId?: number): Promise<void> {
+        const deal = await this.findOne(id, user, contextOrgId);
         deal.isActive = false;
         await this.dealRepository.save(deal);
     }
 
-    async getDealsPipeline(user: User): Promise<any> {
-        const queryBuilder = this.dealRepository.createQueryBuilder('deal')
-            .where('deal.isActive = :isActive', { isActive: true });
-
-        if (user.companyId) {
-            queryBuilder.andWhere('deal.companyId = :companyId', { companyId: user.companyId });
-        }
-
-        const deals = await queryBuilder.getMany();
+    async getDealsPipeline(user: User, contextOrgId?: number): Promise<any> {
+        const organizationId = await this.validateOrganizationAccess(user, contextOrgId);
+        
+        const deals = await this.dealRepository.find({
+            where: { isActive: true, organizationId },
+        });
 
         // Group by stage
         const pipeline = Object.values(DealStage).map(stage => ({
