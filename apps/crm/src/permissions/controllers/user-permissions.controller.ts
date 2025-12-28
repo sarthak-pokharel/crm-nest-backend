@@ -3,7 +3,7 @@ import { JwtAuthGuard } from '../../auth/jwt/jwt.guard';
 import { GetUser } from '../../auth/user/user.decorator';
 import { User } from '../../auth/user/user.entity';
 import { IPermissionReader } from '../interfaces';
-import { Permissions } from '@libs/common';
+import { getAllPermissions } from '@libs/common';
 
 @Controller('me')
 @UseGuards(JwtAuthGuard)
@@ -30,7 +30,7 @@ export class UserPermissionsController {
                 departmentId: user.departmentId || null,
                 teamId: user.teamId || null,
             },
-            constants: Permissions,
+            constants: getAllPermissions(),
         };
     }
 

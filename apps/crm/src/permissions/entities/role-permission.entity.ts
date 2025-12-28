@@ -4,6 +4,7 @@ import { Role } from './role.entity';
 // Import PermissionScope locally to avoid TypeORM CLI path resolution issues
 export enum PermissionScope {
     GLOBAL = 'global',
+    OWNER = 'owner',
     COMPANY = 'company',
     DEPARTMENT = 'department',
     TEAM = 'team',
@@ -27,7 +28,7 @@ export class RolePermission {
     @Column({
         type: 'enum',
         enum: PermissionScope,
-        default: PermissionScope.SELF,
+        default: PermissionScope.GLOBAL,
     })
     scope: PermissionScope;
 

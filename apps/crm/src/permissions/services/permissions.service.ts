@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Role, UserRole, RolePermission } from '../entities';
+import { UserOrganizationRole } from '../../auth/organization/user-organization-role.entity';
 import { PermissionScope } from '@libs/common';
 import { IPermissionsService } from '../interfaces';
 export interface PermissionWithScope {
@@ -17,14 +18,21 @@ export class PermissionsService implements IPermissionsService {
         private userRoleRepository: Repository<UserRole>,
         @InjectRepository(RolePermission)
         private rolePermissionRepository: Repository<RolePermission>,
+        @InjectRepository(UserOrganizationRole)
+        private userOrganizationRoleRepository: Repository<UserOrganizationRole>,
     ) { }
     async getUserPermissions(userId: number): Promise<string[]> {
         const userRoles = await this.userRoleRepository.find({
             where: { userId },
             relations: ['role', 'role.rolePermissions'],
         });
+        const orgRoles = await this.userOrganizationRoleRepository.find({
+            where: { userId },
+            relations: ['role', 'role.rolePermissions'],
+        });
         const permissionsSet = new Set<string>();
-        for (const userRole of userRoles) {
+        const allRoles = [...userRoles, ...orgRoles];
+        for (const userRole of allRoles) {
             if (!userRole.role?.isActive) continue;
             for (const rolePermission of userRole.role.rolePermissions || []) {
                 permissionsSet.add(rolePermission.permissionKey);
@@ -37,8 +45,13 @@ export class PermissionsService implements IPermissionsService {
             where: { userId },
             relations: ['role', 'role.rolePermissions'],
         });
+        const orgRoles = await this.userOrganizationRoleRepository.find({
+            where: { userId },
+            relations: ['role', 'role.rolePermissions'],
+        });
         const permissionsMap = new Map<string, PermissionScope>();
-        for (const userRole of userRoles) {
+        const allRoles = [...userRoles, ...orgRoles];
+        for (const userRole of allRoles) {
             if (!userRole.role?.isActive) continue;
             for (const rolePermission of userRole.role.rolePermissions || []) {
                 const key = rolePermission.permissionKey;

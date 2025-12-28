@@ -5,6 +5,7 @@ export enum PermissionScope {
   DEPARTMENT = 'department', // Access to resources within user's department
   TEAM = 'team',           // Access to resources within user's team
   SELF = 'self',           // Access only to resources owned by the user
+  OWNER = 'owner',         // Full access to resources created by the user
 }
 
 // Scope hierarchy - higher scopes include lower scopes
@@ -14,20 +15,27 @@ export const SCOPE_HIERARCHY: Record<PermissionScope, PermissionScope[]> = {
     PermissionScope.DEPARTMENT,
     PermissionScope.TEAM,
     PermissionScope.SELF,
+    PermissionScope.OWNER,
   ],
   [PermissionScope.COMPANY]: [
     PermissionScope.DEPARTMENT,
     PermissionScope.TEAM,
     PermissionScope.SELF,
+    PermissionScope.OWNER,
   ],
   [PermissionScope.DEPARTMENT]: [
     PermissionScope.TEAM,
     PermissionScope.SELF,
+    PermissionScope.OWNER,
   ],
   [PermissionScope.TEAM]: [
     PermissionScope.SELF,
+    PermissionScope.OWNER,
   ],
-  [PermissionScope.SELF]: [],
+  [PermissionScope.SELF]: [
+    PermissionScope.OWNER,
+  ],
+  [PermissionScope.OWNER]: [],
 };
 
 // Permission operators for combining permissions
@@ -71,6 +79,15 @@ export const Permissions = {
     CREATE: 'user:create',
     UPDATE: 'user:update',
     DELETE: 'user:delete',
+  },
+
+  // Organization Management
+  Organization: {
+    READ: 'organization:read',
+    CREATE: 'organization:create',
+    UPDATE: 'organization:update',
+    DELETE: 'organization:delete',
+    MANAGE_USERS: 'organization:manage_users',
   },
 
   // Role Management

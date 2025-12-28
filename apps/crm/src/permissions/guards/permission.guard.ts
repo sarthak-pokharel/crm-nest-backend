@@ -63,6 +63,7 @@ export class PermissionGuard implements CanActivate {
         const resourceId = request.params.id;
         const resource = request.resource;
         if (!resource) return false;
-        return resource.userId === user.id || resource.ownerId === user.id;
+        // Check ownership by userId, ownerId, or createdById
+        return resource.userId === user.id || resource.ownerId === user.id || resource.createdById === user.id;
     }
 }
