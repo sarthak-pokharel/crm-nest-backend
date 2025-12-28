@@ -46,17 +46,17 @@ export interface PermissionRequirement {
 export const Owner = Symbol('OWNER');
 
 // Helper functions to create permission requirements
-export function AND(...permissions: string[]): PermissionRequirement {
+export function AND(...permissions: (string | symbol)[]): PermissionRequirement {
   return {
     operator: PermissionOperator.AND,
-    permissions,
+    permissions: permissions.map(p => (typeof p === 'symbol' ? p.toString() : p)),
   };
 }
 
-export function OR(...permissions: string[]): PermissionRequirement {
+export function OR(...permissions: (string | symbol)[]): PermissionRequirement {
   return {
     operator: PermissionOperator.OR,
-    permissions,
+    permissions: permissions.map(p => (typeof p === 'symbol' ? p.toString() : p)),
   };
 }
 
@@ -96,33 +96,29 @@ export const Permissions = {
     PUBLISH: 'content:publish',
   },
 
-  // Lead Management
-  Lead: {
-    READ: 'lead:read',
-    CREATE: 'lead:create',
-    UPDATE: 'lead:update',
-    DELETE: 'lead:delete',
-    ASSIGN: 'lead:assign',
-  },
-
-  // Deal Management
-  Deal: {
-    READ: 'deal:read',
-    CREATE: 'deal:create',
-    UPDATE: 'deal:update',
-    DELETE: 'deal:delete',
-    APPROVE: 'deal:approve',
-    CLOSE: 'deal:close',
-  },
-
-  // Account Management
-  Account: {
-    READ: 'account:read',
-    CREATE: 'account:create',
-    UPDATE: 'account:update',
-    DELETE: 'account:delete',
-  },
 } as const;
+
+// Allow modules to extend permissions dynamically
+export const ExtendedPermissions: Record<string, Record<string, string>> = {};
+
+/**
+ * Register module-specific permissions
+ * @param moduleName - Name of the module (e.g., 'Lead', 'Company')
+ * @param permissions - Permission object for the module
+ */
+export function registerModulePermissions(
+  moduleName: string,
+  permissions: Record<string, string>,
+): void {
+  ExtendedPermissions[moduleName] = permissions;
+}
+
+/**
+ * Get all permissions including core and extended module permissions
+ */
+export function getAllPermissions() {
+  return { ...Permissions, ...ExtendedPermissions };
+}
 
 // Type helper for permission values
 export type Permission = typeof Permissions[keyof typeof Permissions][keyof typeof Permissions[keyof typeof Permissions]];
@@ -130,7 +126,8 @@ export type Permission = typeof Permissions[keyof typeof Permissions][keyof type
 // Get all permission keys as array (useful for seeding)
 export function getAllPermissionKeys(): string[] {
   const keys: string[] = [];
-  Object.values(Permissions).forEach(resource => {
+  const allPermissions = getAllPermissions();
+  Object.values(allPermissions).forEach(resource => {
     Object.values(resource).forEach(permission => {
       keys.push(permission);
     });
