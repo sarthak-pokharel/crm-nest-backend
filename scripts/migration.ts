@@ -56,7 +56,7 @@ function generateMigration(name: string) {
       "exec",
       "typeorm-ts-node-commonjs",
       "migration:generate",
-      join("src/migrations", name),
+      join("apps/crm/src/migrations", name),
       "-d",
       "scripts/data-source.ts" // <-- use static DataSource
     ],
