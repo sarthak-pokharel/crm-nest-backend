@@ -13,7 +13,7 @@ export class LeadsService extends TenantBaseService {
         @InjectRepository(Lead)
         private leadRepository: Repository<Lead>,
         @InjectRepository(UserOrganizationRole)
-        private userOrganizationRoleRepository: Repository<UserOrganizationRole>,
+        protected userOrganizationRoleRepository: Repository<UserOrganizationRole>,
     ) {
         super(userOrganizationRoleRepository);
     }
