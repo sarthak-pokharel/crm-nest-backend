@@ -1,5 +1,8 @@
 import { Body, Controller, Get, Post, Put, Param, UseGuards, ParseIntPipe, NotFoundException } from '@nestjs/common';
 import { JwtAuthGuard } from '../../auth/jwt/jwt.guard';
+import { PermissionGuard } from '../guards/permission.guard';
+import { Permission } from '../decorators/permission.decorator';
+import { Permissions } from '@libs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Role } from '../entities/role.entity';
@@ -51,7 +54,7 @@ class UpdateRolePermissionsDto {
 }
 
 @Controller('roles')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionGuard)
 export class RolesController {
   constructor(
     @InjectRepository(Role)
@@ -61,6 +64,7 @@ export class RolesController {
   ) {}
 
   @Get()
+  @Permission(Permissions.Role.READ)
   async findAll() {
     return await this.roleRepository.find({
       where: { isActive: true },
@@ -69,6 +73,7 @@ export class RolesController {
   }
 
   @Get(':id')
+  @Permission(Permissions.Role.READ)
   async findOne(@Param('id', ParseIntPipe) id: number) {
     const role = await this.roleRepository.findOne({ where: { id } });
     if (!role) throw new NotFoundException('Role not found');
@@ -76,6 +81,7 @@ export class RolesController {
   }
 
    @Post()
+   @Permission(Permissions.Role.CREATE)
    async create(@Body() dto: CreateRoleDto) {
     const role = this.roleRepository.create({
       name: dto.name,
@@ -86,6 +92,7 @@ export class RolesController {
   }
 
   @Put(':id')
+  @Permission(Permissions.Role.UPDATE)
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateRoleDto,
@@ -101,6 +108,7 @@ export class RolesController {
   }
 
   @Get(':id/permissions')
+  @Permission(Permissions.Role.READ)
   async getPermissions(@Param('id', ParseIntPipe) id: number) {
     const role = await this.roleRepository.findOne({ where: { id } });
     if (!role) throw new NotFoundException('Role not found');
@@ -109,6 +117,7 @@ export class RolesController {
   }
 
   @Put(':id/permissions')
+  @Permission(Permissions.Role.UPDATE)
   async updatePermissions(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateRolePermissionsDto,
