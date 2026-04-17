@@ -22,7 +22,8 @@
     "migration:generate": "ts-node scripts/migration.ts generate",
     "migration:run": "ts-node scripts/migration.ts run",
     "migration:revert": "ts-node scripts/migration.ts revert",
-    "seed:permissions": "ts-node scripts/seed-permissions.ts"
+    "seed:permissions": "ts-node -r tsconfig-paths/register scripts/seed-permissions.ts",
+    "seed:demo": "ts-node -r tsconfig-paths/register scripts/seed-demo-data.ts"
   },
   "dependencies": {
     "@casl/ability": "^6.7.5",
