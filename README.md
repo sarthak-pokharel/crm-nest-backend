@@ -1,98 +1,216 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# CRM Platform -- Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A production-grade, multi-tenant Customer Relationship Management system built as a NestJS monorepo. The backend powers a full-featured CRM with lead tracking, deal pipelines, contact and company management, activity logging, task management, and a granular role-based access control system. It includes a dedicated email microservice for transactional emails and is designed with clean architecture principles for maintainability and scalability.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Screenshots
 
-## Description
+![Dashboard Overview](docs/images/1.png)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+![Lead Management](docs/images/2.png)
 
-## Project setup
+![Deal Pipeline](docs/images/3.png)
 
-```bash
-$ pnpm install
+![Contact Details](docs/images/4.png)
+
+![Company Management](docs/images/5.png)
+
+![Task Management](docs/images/6.png)
+
+![Role-Based Permissions](docs/images/7.png)
+
+## Tech Stack
+
+- **Runtime:** Node.js with TypeScript (strict mode)
+- **Framework:** NestJS 11 (monorepo structure)
+- **Database:** PostgreSQL with TypeORM
+- **Authentication:** JWT with Passport.js, bcrypt password hashing
+- **Authorization:** CASL-based attribute-level access control with hierarchical permission scopes
+- **Email:** Dedicated microservice with BullMQ job queues, Handlebars + MJML templating, Nodemailer transport
+- **Validation:** class-validator and class-transformer for DTO validation
+- **Architecture:** CQRS pattern via @nestjs/cqrs, event-driven microservice communication
+- **Package Manager:** pnpm
+
+## Monorepo Structure
+
+```
+apps/
+  crm/                    # Main CRM API application
+  email-service/          # Email microservice (event-driven)
+  messaging-service/      # Messaging microservice (scaffolded)
+libs/
+  common/                 # Shared types, events, constants, permission definitions
+scripts/                  # Database migrations, seed scripts
+static/
+  email-templates/        # MJML email templates with layouts and partials
 ```
 
-## Compile and run the project
+## Features
+
+### Core CRM Modules
+- **Leads** -- Create, track, and convert leads with status workflows and scoring
+- **Deals** -- Manage sales pipeline with stages, values, and close dates
+- **Contacts** -- Store and organize contact information with relationship tracking
+- **Companies** -- Company profiles with size, industry, and location data
+- **Activities** -- Log calls, meetings, emails, and other interactions
+- **Tasks** -- Task assignment, due dates, priority levels, and completion tracking
+
+### Multi-Tenancy
+- Full organization-based data isolation
+- Users can belong to multiple organizations with different roles
+- Organization switching with scoped data access
+- Tenant-aware base service for automatic query scoping
+
+### Authentication and Authorization
+- JWT-based authentication with secure token generation
+- User registration and login with bcrypt password hashing
+- CASL-powered permission system with 6 hierarchical scopes: Global, Company, Department, Team, Self, and Owner
+- Role management with granular permission assignment per resource and action
+- Permission guard that enforces access control on every protected endpoint
+
+### Email Microservice
+- Decoupled microservice architecture using NestJS microservices
+- BullMQ-backed job queue for reliable email delivery
+- MJML templates compiled to responsive HTML
+- Handlebars templating for dynamic content
+- Event-driven triggers (user registration, etc.)
+
+### API Design
+- RESTful endpoints with consistent CRUD patterns
+- DTO-based request validation with class-validator
+- Proper HTTP status codes and error handling
+- Pagination and filtering support
+
+## Prerequisites
+
+- Node.js >= 18
+- PostgreSQL >= 14
+- pnpm >= 8
+- Redis (for BullMQ email queue)
+
+## Getting Started
+
+### 1. Install dependencies
 
 ```bash
-# development
-$ pnpm run start
-
-# watch mode
-$ pnpm run start:dev
-
-# production mode
-$ pnpm run start:prod
+pnpm install
 ```
 
-## Run tests
+### 2. Configure environment
+
+Create a `.env` file in the project root:
+
+```env
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=your_password
+DB_DATABASE=crm
+
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRATION=1d
+
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=your_email
+SMTP_PASS=your_password
+```
+
+### 3. Run database migrations
 
 ```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+pnpm run migration:run
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### 4. Seed permissions and roles
 
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+pnpm run seed:permissions
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+### 5. Seed demo data (optional)
 
-## Resources
+```bash
+pnpm run seed:demo
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+This populates the database with sample organizations, users, companies, leads, contacts, deals, activities, and tasks for demonstration purposes.
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### 6. Start the application
 
-## Support
+```bash
+# Development mode with hot reload
+pnpm run start:dev
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+# Production mode
+pnpm run start:prod
+```
 
-## Stay in touch
+The API runs on `http://localhost:3000` by default.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### 7. Start the email microservice (optional)
+
+```bash
+pnpm run start email-service
+```
+
+## API Endpoints
+
+| Resource | Endpoints | Description |
+|---|---|---|
+| `/auth` | `POST /login`, `POST /register`, `GET /me`, `GET /permissions` | Authentication and user session |
+| `/users` | `POST /`, `GET /:id`, `PUT /:id`, `DELETE /:id` | User management |
+| `/organizations` | Full CRUD + `/stats`, `/users` management | Multi-tenant organization management |
+| `/leads` | Full CRUD + `PATCH /:id/status` | Lead tracking and status updates |
+| `/deals` | Full CRUD + `GET /pipeline` | Deal pipeline management |
+| `/contacts` | Full CRUD | Contact management |
+| `/companies` | Full CRUD | Company management |
+| `/activities` | Full CRUD + `GET /upcoming` | Activity logging and scheduling |
+| `/tasks` | Full CRUD + `GET /my-tasks`, `GET /overdue`, `PATCH /:id/complete` | Task management |
+| `/roles` | Full CRUD + `GET /:id/permissions`, `PUT /:id/permissions` | Role and permission management |
+
+## Database Schema
+
+13 entities with full relational mapping:
+
+- **User** -- Authentication credentials and profile
+- **Organization** -- Tenant isolation boundary
+- **UserOrganizationRole** -- Many-to-many user-organization-role mapping
+- **Role** -- Named permission groups
+- **RolePermission** -- Individual permission entries per role
+- **UserRole** -- User-to-role assignments
+- **Company** -- Business entity profiles
+- **Lead** -- Sales leads with status and scoring
+- **Contact** -- Individual contact records
+- **Deal** -- Sales opportunities with pipeline stages
+- **Activity** -- Interaction logs (calls, meetings, emails)
+- **Task** -- Assignable work items with due dates
+
+## Available Scripts
+
+| Script | Description |
+|---|---|
+| `pnpm run start:dev` | Start in development mode with hot reload |
+| `pnpm run start:prod` | Start in production mode |
+| `pnpm run build` | Build the application |
+| `pnpm run migration:generate` | Generate a new migration |
+| `pnpm run migration:run` | Run pending migrations |
+| `pnpm run migration:revert` | Revert the last migration |
+| `pnpm run seed:permissions` | Seed roles and permissions |
+| `pnpm run seed:demo` | Seed demo data for showcase |
+| `pnpm run test` | Run unit tests |
+| `pnpm run test:e2e` | Run end-to-end tests |
+| `pnpm run lint` | Lint and fix code |
+
+## Project Highlights
+
+- **Production patterns** -- Multi-tenant data isolation, CASL-based RBAC, event-driven microservices, job queues for reliability
+- **Clean architecture** -- Modular NestJS structure with shared libraries, base classes, and consistent patterns across all modules
+- **Type safety** -- Strict TypeScript throughout with DTOs, entities, and interfaces
+- **Scalable design** -- Microservice-ready with decoupled email service, messaging service scaffold, and event-driven communication
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+MIT
