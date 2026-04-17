@@ -3,6 +3,9 @@ import { AuthService } from "./auth.service";
 import { CreateUserDto, LoginUserDto } from "./user/user.dto";
 import { JwtStrategy } from "./jwt/jwt.strategy";
 import { JwtAuthGuard } from "./jwt/jwt.guard";
+import { PermissionGuard } from "../permissions/guards/permission.guard";
+import { Permission } from "../permissions/decorators/permission.decorator";
+import { Permissions } from "@libs/common";
 import { GetUser } from "./user/user.decorator";
 
 
@@ -36,7 +39,8 @@ export class AuthController {
         );
     }
 
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, PermissionGuard)
+    @Permission(Permissions.User.READ)
     @Get("/users")
     async getAllUsers() {
         return this.authService.getAllUsers();
