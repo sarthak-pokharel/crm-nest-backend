@@ -55,13 +55,22 @@ export class OrganizationService {
       createDto.slug = this.generateSlug(createDto.name);
     }
 
-    // Check if slug is unique
+    // Check if slug is unique among active organizations
     const existing = await this.organizationRepository.findOne({
-      where: { slug: createDto.slug },
+      where: { slug: createDto.slug, isActive: true },
     });
 
     if (existing) {
       throw new ConflictException('Organization slug already exists');
+    }
+
+    // Check if name is unique among active organizations
+    const existingName = await this.organizationRepository.findOne({
+      where: { name: createDto.name, isActive: true },
+    });
+
+    if (existingName) {
+      throw new ConflictException('Organization name already exists');
     }
 
     const organization = this.organizationRepository.create({
@@ -74,6 +83,7 @@ export class OrganizationService {
   /** Get all active organizations, ordered by creation date (newest first) */
   async findAll(): Promise<Organization[]> {
     return await this.organizationRepository.find({
+      where: { isActive: true },
       order: { createdAt: 'DESC' },
     });
   }
@@ -122,10 +132,10 @@ export class OrganizationService {
   async update(id: number, updateDto: UpdateOrganizationDto): Promise<Organization> {
     const organization = await this.findOne(id);
 
-    // If slug is being updated, check uniqueness
+    // If slug is being updated, check uniqueness among active organizations
     if (updateDto.slug && updateDto.slug !== organization.slug) {
       const existing = await this.organizationRepository.findOne({
-        where: { slug: updateDto.slug },
+        where: { slug: updateDto.slug, isActive: true },
       });
 
       if (existing) {
@@ -133,14 +143,31 @@ export class OrganizationService {
       }
     }
 
+    // If name is being updated, check uniqueness among active organizations
+    if (updateDto.name && updateDto.name !== organization.name) {
+      const existingName = await this.organizationRepository.findOne({
+        where: { name: updateDto.name, isActive: true },
+      });
+
+      if (existingName) {
+        throw new ConflictException('Organization name already exists');
+      }
+    }
+
     Object.assign(organization, updateDto);
     return await this.organizationRepository.save(organization);
   }
 
-  /** Delete organization by ID */
+  /** Soft-delete organization by ID (sets isActive = false to preserve FK references) */
   async remove(id: number): Promise<void> {
     const organization = await this.findOne(id);
-    await this.organizationRepository.remove(organization);
+    organization.isActive = false;
+    // Mangle name/slug to free the unique constraints for future reuse
+    organization.name = `${organization.name}_deleted_${id}`;
+    if (organization.slug) {
+      organization.slug = `${organization.slug}_deleted_${id}`;
+    }
+    await this.organizationRepository.save(organization);
   }
 
   /**
