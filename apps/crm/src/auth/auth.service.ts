@@ -1,11 +1,9 @@
-import { Injectable, Req, UnauthorizedException } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { CreateUserDto, User, UserService } from "./user";
 import * as bcrypt from 'bcrypt';
 import { JwtPayload, LoginResponse, RegisterResponse } from "@libs/common/types";
 import { JwtService } from "@nestjs/jwt";
-import { last } from "rxjs";
 import { DataSource } from "typeorm";
-import { PermissionScope } from "@libs/common/permissions/permissions.constants";
 
 @Injectable()
 export class AuthService {
@@ -80,21 +78,23 @@ export class AuthService {
     }
 
     async getPermissions(user: User, organizationId?: number) {
-        // Fetch user's role-based permissions from database
+        // Fetch user's role-based permissions from database with scope
         // Include both global roles (user_roles) and organization-specific roles (user_organization_roles)
-        const globalPermissions = await this.dataSource.query(
+        const globalPermissions: { permission: string; scope: string }[] = await this.dataSource.query(
             `SELECT DISTINCT
-                rp."permissionKey" as "permission"
+                rp."permissionKey" as "permission",
+                rp."scope" as "scope"
             FROM user_roles ur
             JOIN role_permissions rp ON ur."roleId" = rp."roleId"
             WHERE ur."userId" = $1`,
             [user.id]
         );
 
-        const orgPermissions = organizationId
+        const orgPermissions: { permission: string; scope: string }[] = organizationId
             ? await this.dataSource.query(
                 `SELECT DISTINCT
-                    rp."permissionKey" as "permission"
+                    rp."permissionKey" as "permission",
+                    rp."scope" as "scope"
                 FROM user_organization_roles uor
                 JOIN role_permissions rp ON uor."roleId" = rp."roleId"
                 WHERE uor."userId" = $1 AND uor."organizationId" = $2`,
@@ -102,12 +102,27 @@ export class AuthService {
             )
             : [];
 
-        const allPermissions = [...globalPermissions, ...orgPermissions];
+        // Deduplicate permissions, keeping the broadest scope
+        const scopeOrder = ['global', 'company', 'department', 'team', 'self', 'owner'];
+        const permMap = new Map<string, string>();
+
+        for (const p of [...globalPermissions, ...orgPermissions]) {
+            const existing = permMap.get(p.permission);
+            const scope = p.scope || 'global';
+            if (!existing || scopeOrder.indexOf(scope) < scopeOrder.indexOf(existing)) {
+                permMap.set(p.permission, scope);
+            }
+        }
+
+        const permissions = Array.from(permMap.entries()).map(([permission, scope]) => ({
+            permission,
+            scope,
+        }));
 
         return {
             userId: user.id,
             organizationId,
-            permissions: allPermissions,
+            permissions,
         };
     }
 
