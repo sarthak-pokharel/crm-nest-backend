@@ -3,13 +3,19 @@ import { PureAbility, AbilityBuilder, AbilityClass } from '@casl/ability';
 export type Action = 'read' | 'create' | 'update' | 'delete' | 'manage' | 'assign' | 'approve' | 'close' | 'publish';
 
 export type Subject =
-    | 'Lead'
-    | 'Deal'
-    | 'User'
-    | 'Role'
-    | 'Permission'
-    | 'Content'
-    | 'Account'
+    | 'lead'
+    | 'deal'
+    | 'user'
+    | 'role'
+    | 'permission'
+    | 'organization'
+    | 'company'
+    | 'contact'
+    | 'task'
+    | 'activity'
+    | 'email'
+    | 'content'
+    | 'account'
     | 'all';
 
 export type AppAbility = PureAbility<[Action, Subject]>;
