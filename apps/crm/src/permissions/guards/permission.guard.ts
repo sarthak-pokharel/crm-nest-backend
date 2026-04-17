@@ -3,6 +3,9 @@ import { Reflector } from '@nestjs/core';
 import { PERMISSIONS_KEY } from '../decorators/permission.decorator';
 import { IAbilityFactory } from '../interfaces';
 import { PermissionOperator, Owner } from '@libs/common';
+
+const OWNER_STRING = Owner.toString(); // 'Symbol(OWNER)'
+
 @Injectable()
 export class PermissionGuard implements CanActivate {
     constructor(
@@ -36,6 +39,7 @@ export class PermissionGuard implements CanActivate {
                     req.operator,
                     ability,
                     request,
+                    user,
                 );
                 if (hasPermission) return true;
             }
@@ -47,12 +51,19 @@ export class PermissionGuard implements CanActivate {
         operator: PermissionOperator | undefined,
         ability: any,
         request: any,
+        user: any,
     ): Promise<boolean> {
-        const checks = permissions.map(perm => {
-            const [resource, action] = perm.split(':');
-            const subject = request.resource || resource;
-            return ability.can(action, subject);
-        });
+        const checks: boolean[] = [];
+        for (const perm of permissions) {
+            if (perm === OWNER_STRING) {
+                // Handle Owner symbol that was stringified inside OR()/AND()
+                checks.push(await this.checkOwnership(request, user));
+            } else {
+                const [resource, action] = perm.split(':');
+                // Always use the parsed resource string, not request.resource (which is an entity object)
+                checks.push(ability.can(action, resource));
+            }
+        }
         if (operator === PermissionOperator.AND) {
             return checks.every(check => check);
         } else {
@@ -60,10 +71,8 @@ export class PermissionGuard implements CanActivate {
         }
     }
     private async checkOwnership(request: any, user: any): Promise<boolean> {
-        const resourceId = request.params.id;
         const resource = request.resource;
         if (!resource) return false;
-        // Check ownership by userId, ownerId, or createdById
         return resource.userId === user.id || resource.ownerId === user.id || resource.createdById === user.id;
     }
 }
